@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////
 //
 // NAME
-//  WarpSpherical.h -- warp a flat (perspective) image into spherical
+//  WarpSpherical.cpp -- warp a flat (perspective) image into spherical
 //      coordinates and/or undo radial lens distortion
 //
 // SEE ALSO
-//  WarpSpherical.h   longer description
+//  WarpSpherical.cpp   longer description
 //
 //  R. Szeliski and H.-Y. Shum.
 //  Creating full view panoramic image mosaics and texture-mapped models.
@@ -69,6 +69,16 @@ CFloatImage WarpSphericalField(CShape srcSh, CShape dstSh, float f,
 			// (xt/zt,yt/zt,1), then distort with radial distortion
 			// coefficients k1 and k2
 
+			// TODO optimize
+			xt = sin(xf)*cos(yf);
+			yt = sin(yf);
+			zt = cos(xf)*cos(yf);
+
+			xt /= zt;
+			yt /= zt;
+			zt = 1;
+
+			
 
 			// *** END TODO ***
 
