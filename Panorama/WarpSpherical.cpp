@@ -70,15 +70,27 @@ CFloatImage WarpSphericalField(CShape srcSh, CShape dstSh, float f,
 			// coefficients k1 and k2
 
 			// TODO optimize
+			//Computing Euclidean coordinates
 			xt = sin(xf)*cos(yf);
 			yt = sin(yf);
 			zt = cos(xf)*cos(yf);
-
+			
+			//Rotating according to r
+			xt = xt * r[0][0] + xt * r[1][0] + xt * r[2][0];
+			yt = yt * r[0][1] + yt * r[1][1] + yt * r[2][1];
+			zt = zt * r[0][2] + yt * r[1][2] + zt * r[2][2];
+			
+			//projecting onto z = 1 plane
 			xt /= zt;
 			yt /= zt;
 			zt = 1;
 
-			
+			//radial distortion
+			float rSq;
+			rSq = xt * xt + yt * yt;
+			float temp = 1 + (k1 * rSq) + (k2 * rSq * rSq);
+			xt *= temp;
+			yt *= temp;			
 
 			// *** END TODO ***
 
