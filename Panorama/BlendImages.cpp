@@ -129,8 +129,6 @@ void ImageBoundingBox(CImage &image, CTransform3x3 &M,
  */
 static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, float blendWidth)
 {
-
-	
     /* Compute the bounding box of the image of the image */
     int bb_min_x, bb_min_y, bb_max_x, bb_max_y;
     ImageBoundingBox(img, M, bb_min_x, bb_min_y, bb_max_x, bb_max_y);
@@ -192,8 +190,13 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
 			// set weight properly
 			//(see mosaics lecture slide on "feathering") 
 	
-			
+			int distToEdge = (y - bb_min_y);
+			distToEdge = MIN(distToEdge, bb_max_y - y);
+			distToEdge = MIN(distToEdge, x - bb_min_x);
+			distToEdge = MIN(distToEdge, bb_max_x - x);
 
+			if (distToEdge <= blendWidth)
+				weight = distToEdge / blendWidth;
             
 			// *** END TODO ***	
 
@@ -226,7 +229,22 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
 {
 	// *** BEGIN TODO ***
 	// fill in this routine..
-	
+	for (int y = 0; y < acc.Shape().height; y++)
+		for (int x = 0; x < acc.Shape().width; x++)
+		{
+			if (acc.Pixel(x,y,3) > 0.0)
+			{
+				float w = acc.Pixel(x,y,3);
+				img.Pixel(x,y,0) = acc.Pixel(x,y,0) / w;
+				img.Pixel(x,y,1) = acc.Pixel(x,y,1) / w;
+				img.Pixel(x,y,2) = acc.Pixel(x,y,2) / w;
+				img.Pixel(x,y,3) = 1; // opaque
+			}
+			else
+			{
+				img.Pixel(x,y,0) = img.Pixel(x,y,1) = img.Pixel(x,y,2) = img.Pixel(x,y,3) = 0; // fully transparent black
+			}
+		}
 
 	// *** END TODO ***
 }
@@ -297,7 +315,17 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
         
 		// *** BEGIN TODO #1 ***
 		// add some code here to update min_x, ..., max_y
-
+		for (int i = 0; i < 4; i++)
+		{
+			// just expand bounds to fit every corner
+			// (unlikely for ex. corners to flip around by a reflection,
+			// ...but it's not a big enough deal to optimize for)
+			CVector3 corner = corners[i];
+			min_x = float(MIN(min_x, corner[0]));
+			max_x = float(MAX(max_x, corner[0]));
+			min_y = float(MIN(min_y, corner[1]));
+			max_y = float(MAX(max_y, corner[1]));
+		}
 		// *** END TODO #1 ***
     }
 
@@ -348,12 +376,12 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
     // Normalize the results
     CByteImage compImage(mShape);
     NormalizeBlend(accumulator, compImage);
-    bool debug_comp = false;
+    bool debug_comp = true;
     if (debug_comp)
         WriteFile(compImage, "tmp_comp.tga");
 
     // Allocate the final image shape
-    CShape cShape(mShape.width - width, height, nBands);
+    CShape cShape(mShape.width - width, mShape.height, nBands);
     CByteImage croppedImage(cShape);
 
     // Compute the affine deformation
@@ -363,6 +391,17 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
     // fill in the right entries in A to trim the left edge and
     // to take out the vertical drift
 
+	A[0][0] = 1;
+	A[0][1] = 0;
+	A[0][2] = width/2; // x translation
+
+	A[1][0] = -ipv[n-1].position[1][2] / cShape.width; // delta y per unit x, TODO
+	A[1][1] = 1;
+	A[1][2] = 0; // y translation
+
+	A[2][0] = 0;
+	A[2][1] = 0;
+	A[2][2] = 1;
 
 	// *** END TODO #2 ***
 
