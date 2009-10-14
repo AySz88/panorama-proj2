@@ -59,7 +59,7 @@ CFloatImage WarpSphericalField(CShape srcSh, CShape dstSh, float f,
 
 			// (xt,yt,zt) are intermediate coordinates to which you can
 			// apply the spherical correction and radial distortion
-            float xt, yt, zt;
+            float xt, yt; /* zt unused */
 			CVector3 p;
  
 			// *** BEGIN TODO ***
@@ -69,28 +69,26 @@ CFloatImage WarpSphericalField(CShape srcSh, CShape dstSh, float f,
 			// (xt/zt,yt/zt,1), then distort with radial distortion
 			// coefficients k1 and k2
 
-			// TODO optimize
+			CVector3 tmp;
 			//Computing Euclidean coordinates
-			xt = sin(xf)*cos(yf);
-			yt = sin(yf);
-			zt = cos(xf)*cos(yf);
+			tmp[0] = sin(xf)*cos(yf);
+			tmp[1] = sin(yf);
+			tmp[2] = cos(xf)*cos(yf);
 			
 			//Rotating according to r
-			xt = xt * r[0][0] + xt * r[1][0] + xt * r[2][0];
-			yt = yt * r[0][1] + yt * r[1][1] + yt * r[2][1];
-			zt = zt * r[0][2] + yt * r[1][2] + zt * r[2][2];
+			tmp = r*tmp;
 			
 			//projecting onto z = 1 plane
-			xt /= zt;
-			yt /= zt;
-			zt = 1;
+			xt = float(tmp[0]/tmp[2]);
+			yt = float(tmp[1]/tmp[2]);
+			// zt = 1 (unused)
 
 			//radial distortion
 			float rSq;
 			rSq = xt * xt + yt * yt;
 			float temp = 1 + (k1 * rSq) + (k2 * rSq * rSq);
 			xt *= temp;
-			yt *= temp;			
+			yt *= temp;
 
 			// *** END TODO ***
 
