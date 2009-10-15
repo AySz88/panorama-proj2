@@ -43,10 +43,19 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
 {
     // BEGIN TODO
     // write this entire method
+	vector<int> bestGroup;
      for(int i = 0; i < nRANSAC; i++){
-		 
-
+		 int thisIdx = rand() % matches.size();
+		 CTransform3x3 thisTrans;
+		 thisTrans[0][0] = thisTrans[1][1] = thisTrans[2][2] = 1;
+		 thisTrans[0][1] = thisTrans[1][0] = thisTrans[2][0] = thisTrans[2][1] = 0;
+		 thisTrans[0][2] = f2[matches[thisIdx].id2-1].x - f1[matches[thisIdx].id1-1].x;
+		 thisTrans[1][2] = f2[matches[thisIdx].id2-1].y - f1[matches[thisIdx].id1-1].y;
+		 vector<int> inliers;
+		 int count = countInliers(f1, f2, matches, m, f, thisTrans, RANSACthresh, inliers);
+		 if (inliers.size() > bestGroup.size()) bestGroup = inliers;
 	 }
+	 leastSquaresFit(f1, f2, matches, m, f, bestGroup, M);
     // END TODO
 
     return 0;
@@ -148,8 +157,8 @@ int leastSquaresFit(const FeatureSet &f1, const FeatureSet &f2,
         // BEGIN TODO
         // compute the translation implied by the ith inlier match
         // and store it in (xTrans,yTrans)
-		xTrans = f2[matches[inliers.at(i)].id2].x - f1[matches[inliers.at(i)].id1].x;
-		yTrans = f2[matches[inliers.at(i)].id2].y - f1[matches[inliers.at(i)].id1].y;
+		xTrans = f2[matches[inliers[i]].id2-1].x - f1[matches[inliers[i]].id1-1].x;
+		yTrans = f2[matches[inliers[i]].id2-1].y - f1[matches[inliers[i]].id1-1].y;
 
         // END TODO
 
