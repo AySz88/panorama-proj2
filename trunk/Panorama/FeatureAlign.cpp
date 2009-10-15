@@ -43,8 +43,10 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
 {
     // BEGIN TODO
     // write this entire method
+     for(int i = 0; i < nRANSAC; i++){
+		 
 
-
+	 }
     // END TODO
 
     return 0;
@@ -91,6 +93,22 @@ int countInliers(const FeatureSet &f1, const FeatureSet &f2,
         // *NOTE* Each match contains two feature ids of matching features, id1 and id2.
         //        These ids are 1-based indices into the feature arrays,
         //        so you access the appropriate features as f1[id1-1] and f2[id2-1].
+		CVector3 tmp;
+		tmp[0] = f1[matches[i].id1 - 1 ].x;
+		tmp[1] = f1[matches[i].id1 - 1 ].y;
+		tmp[2] = 0;
+
+		//apply M to f1;
+		tmp[0] = tmp[0] + M[0][2];
+		tmp[1] = tmp[1] + M[1][2];
+
+		if((tmp[0] < f2[matches[i].id2 - 1 ].x + RANSACthresh && tmp[0] > f2[matches[i].id2 - 1 ].x - RANSACthresh) ||
+			(tmp[1] < f2[matches[i].id2 - 1 ].y + RANSACthresh && tmp[1] > f2[matches[i].id2 - 1 ].y - RANSACthresh)){
+				count++;
+				inliers.push_back(i);
+		}
+		
+
 
 
         // END TODO
@@ -130,7 +148,8 @@ int leastSquaresFit(const FeatureSet &f1, const FeatureSet &f2,
         // BEGIN TODO
         // compute the translation implied by the ith inlier match
         // and store it in (xTrans,yTrans)
-
+		xTrans = f2[matches[inliers.at(i)].id2].x - f1[matches[inliers.at(i)].id1].x;
+		yTrans = f2[matches[inliers.at(i)].id2].y - f1[matches[inliers.at(i)].id1].y;
 
         // END TODO
 
